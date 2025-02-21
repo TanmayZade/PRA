@@ -488,6 +488,8 @@ def get_patient_history():
 #we can also include additional notes
 @app.route('/analyze', methods=['POST'])
 def analyze_patient():
+    # hello this is updated line
+    i = 0
     try:
         data = request.json  # Get JSON data from request
         
