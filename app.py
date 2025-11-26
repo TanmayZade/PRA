@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
+from functools import wraps
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your_secret_key"  # Replace with a secure secret
@@ -51,7 +52,7 @@ def get_next_medical_history_id():
         {'_id': 'medicalHistoryID'},
         {'$inc': {'sequence_value': 1}},
         upsert=True,
-        return_document=ReturnDocument.AFTER
+        return_document=True
     )
 
     if 'sequence_value' not in counter:
@@ -80,8 +81,7 @@ def book_appointment():
         return jsonify({"error": "Patient not found"}), 404
 
     # Use a more robust method to find the next appointment ID
-    last_appointment = appointments_collection.find_one({}, sort=[("appointmentID", -1)])
-    new_appointment_id = last_appointment["appointmentID"] + 1 if last_appointment else 1
+    new_appointment_id = ObjectId()
 
     appointment_record = {
         "appointmentID": new_appointment_id,
@@ -98,7 +98,7 @@ def book_appointment():
     if result.inserted_id:
         return jsonify({
             "message": "Appointment booked successfully!",
-            "appointmentID": new_appointment_id
+            "appointmentID": str(new_appointment_id)
         }), 201
     else:
         return jsonify({"error": "Failed to book appointment"}), 500
@@ -112,7 +112,7 @@ def get_patient_history():
         if not patient_id:
             return jsonify({"error": "Missing patientId parameter"}), 400
         
-        patient = patients_collection.find_one({"patientID": patient_id})
+        patient = patients_collection.find_one({"patientID": patient_id}, projection={"medicalhistory": 1})
         if not patient:
             return jsonify({"error": "Patient not found"}), 404
         
@@ -133,7 +133,7 @@ def get_patient_history():
     Previous AI Summaries:
     {ai_summary_text}"""
 
-        return patient_history
+        return jsonify({"patient_history": patient_history})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
