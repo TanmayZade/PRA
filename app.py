@@ -7,7 +7,6 @@ import jwt
 import datetime
 from functools import wraps
 
-api = 'sfddslfsdlfjsdlfsflsdfsf'
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "your_secret_key"  # Replace with a secure secret
 CORS(app)
